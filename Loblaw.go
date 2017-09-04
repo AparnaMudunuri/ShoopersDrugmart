@@ -58,6 +58,7 @@ type Item struct{
 	PurchageOrderNumber string `json:"purchageOrderNumber"`
 	AsnNumber string `json:"asnNumber"`
 	MrrRequestNumber string `json:"mrrRequestNumber"`
+	Storage string `json:"storage"`
 }
 
 
@@ -189,6 +190,7 @@ func (t *ABC) Init(stub shim.ChaincodeStubInterface, function string, args []str
 		&shim.ColumnDefinition{Name: "shUniqueid", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "asnNumber", Type: shim.ColumnDefinition_STRING, Key: false},
 		&shim.ColumnDefinition{Name: "mrrRequestNumber", Type: shim.ColumnDefinition_STRING, Key: false},
+		&shim.ColumnDefinition{Name: "storage", Type: shim.ColumnDefinition_STRING, Key: false},
 	})
 	if err != nil {
 		return nil, errors.New("Failed creating ApplicationTable.")
@@ -407,6 +409,7 @@ if len(args) < 8 {
 			shUniqueid := "NA"
 			asnNumber =	asnNumber
 			mrrRequestNumber := "NA"
+			storage := safeValue(itemArray[row].Storage)
 					
 					
 			// Insert a row 
@@ -439,6 +442,7 @@ if len(args) < 8 {
 				&shim.Column{Value: &shim.Column_String_{String_: shUniqueid}},
 				&shim.Column{Value: &shim.Column_String_{String_: asnNumber}},
 				&shim.Column{Value: &shim.Column_String_{String_: mrrRequestNumber}},
+				&shim.Column{Value: &shim.Column_String_{String_: storage}},
 			}})
 
 		if err != nil {
@@ -559,6 +563,7 @@ func (t *ABC) updateLineItem(stub shim.ChaincodeStubInterface, args []string) ([
 			shUniqueid := row.Columns[24].GetString_()
 			asnNumber := row.Columns[25].GetString_()
 			mrrRequestNumber := row.Columns[26].GetString_()
+	                storage := row.Columns[27].GetString_()
 					
 					
 					
@@ -592,6 +597,7 @@ func (t *ABC) updateLineItem(stub shim.ChaincodeStubInterface, args []string) ([
 				&shim.Column{Value: &shim.Column_String_{String_: shUniqueid}},
 				&shim.Column{Value: &shim.Column_String_{String_: asnNumber}},
 				&shim.Column{Value: &shim.Column_String_{String_: mrrRequestNumber}},
+				&shim.Column{Value: &shim.Column_String_{String_: storage}},
 			}})
 
 		if err != nil {
@@ -822,7 +828,8 @@ func (t *ABC) updateASN(stub shim.ChaincodeStubInterface, args []string) ([]byte
 				grmUniqueid := row.Columns[23].GetString_()
 				shUniqueid := row.Columns[24].GetString_()
 				asnNumber = row.Columns[25].GetString_()
-				mrrRequestNumber := row.Columns[26].GetString_()	
+				mrrRequestNumber := row.Columns[26].GetString_()
+			        storage := row.Columns[27].GetString_()
 					
 					
 				// Insert a row 
@@ -855,6 +862,7 @@ func (t *ABC) updateASN(stub shim.ChaincodeStubInterface, args []string) ([]byte
 					&shim.Column{Value: &shim.Column_String_{String_: shUniqueid}},
 					&shim.Column{Value: &shim.Column_String_{String_: asnNumber}},
 					&shim.Column{Value: &shim.Column_String_{String_: mrrRequestNumber}},
+					&shim.Column{Value: &shim.Column_String_{String_: storage}},
 				}})
 
 			if err != nil {
@@ -962,6 +970,7 @@ func (t *ABC) getASNDetails(stub shim.ChaincodeStubInterface, args []string) ([]
 		itemdetails.PurchageOrderNumber = row.Columns[20].GetString_()
 		itemdetails.AsnNumber = row.Columns[25].GetString_()
 		itemdetails.MrrRequestNumber = row.Columns[26].GetString_()
+		itemdetails.Storage = row.Columns[27].GetString_()
 		
 		asnitem.ItemDetail = append(asnitem.ItemDetail, itemdetails)		
 	}
@@ -1079,6 +1088,7 @@ func (t *ABC) getLineitem(stub shim.ChaincodeStubInterface, args []string) ([]by
 		itemdetails.PurchageOrderNumber = row.Columns[20].GetString_()
 		itemdetails.AsnNumber = row.Columns[25].GetString_()
 		itemdetails.MrrRequestNumber = row.Columns[26].GetString_()
+	        itemdetails.Storage = row.Columns[27].GetString_()
 	
 	
     mapB, _ := json.Marshal(itemdetails)
@@ -1147,6 +1157,80 @@ func (t *ABC) getLineitemByStatus(stub shim.ChaincodeStubInterface, args []strin
 			itemdetails.PurchageOrderNumber = row.Columns[20].GetString_()
 			itemdetails.AsnNumber = row.Columns[25].GetString_()
 			itemdetails.MrrRequestNumber = row.Columns[26].GetString_()
+			itemdetails.Storage = row.Columns[27].GetString_()
+			
+			itemArray.ItemDetail = append(itemArray.ItemDetail, itemdetails)
+		}
+	}
+		
+	
+    mapB, _ := json.Marshal(itemArray)
+    fmt.Println(string(mapB))
+	
+	return mapB, nil
+}
+
+//get getLineitemByStorage(irrespective of organization)
+func (t *ABC) getLineitemByStorage(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+
+	if len(args) != 2 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 2 argument to query")
+	}
+
+	storage := args[0]
+	createdBy := args[1]
+	
+	fmt.Println(createdBy)
+	
+	
+	
+	
+	// Get the row pertaining to this ASN
+	var columns []shim.Column
+	
+
+	rows, err := stub.GetRows("ITEM", columns)
+	
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get the data for the storage " + status + "\"}"
+		return nil, errors.New(jsonResp)
+	}
+
+	
+	var itemArray ItemArray
+	var itemdetails Item
+	itemArray.ItemDetail = make([]Item, 0)
+	
+	for row := range rows {		
+		fetchedLineItemStorage := row.Columns[27].GetString_()
+		
+		if fetchedLineItemStorage == status{
+			
+			
+			itemdetails.LineItemId = row.Columns[0].GetString_()
+			itemdetails.ItemId = row.Columns[1].GetString_()
+			itemdetails.Description = row.Columns[2].GetString_()
+			itemdetails.Qty = row.Columns[3].GetString_()
+			itemdetails.Unit = row.Columns[4].GetString_()
+			itemdetails.Status = row.Columns[5].GetString_()
+			itemdetails.QtyReceivedAtMedturn = row.Columns[6].GetString_()
+			itemdetails.QtyReceivedAtWarehouse = row.Columns[7].GetString_()
+			itemdetails.QtyReceivedAtDisposal = row.Columns[8].GetString_()
+			itemdetails.QtyReceivedAtManufacturer = row.Columns[9].GetString_()
+			itemdetails.CreateTs = row.Columns[10].GetString_()
+			itemdetails.UpdateTs = row.Columns[11].GetString_()
+			itemdetails.UpdatedBy = row.Columns[12].GetString_()
+			itemdetails.Remarks = row.Columns[13].GetString_()
+			itemdetails.BoxBarcodeNumber = row.Columns[14].GetString_()
+			itemdetails.DebitMemo = row.Columns[15].GetString_()
+			itemdetails.LotNumber = row.Columns[16].GetString_()
+			itemdetails.Dc = row.Columns[17].GetString_()
+			itemdetails.Ndc = row.Columns[18].GetString_()
+			itemdetails.ExpDate = row.Columns[19].GetString_()
+			itemdetails.PurchageOrderNumber = row.Columns[20].GetString_()
+			itemdetails.AsnNumber = row.Columns[25].GetString_()
+			itemdetails.MrrRequestNumber = row.Columns[26].GetString_()
+			itemdetails.Storage = row.Columns[27].GetString_()
 			
 			itemArray.ItemDetail = append(itemArray.ItemDetail, itemdetails)
 		}
@@ -1407,6 +1491,7 @@ if len(args) < 8 {
 				shUniqueid := row.Columns[24].GetString_()
 				asnNumber := row.Columns[25].GetString_()
 				mrrRequestNumber := requestNumber	
+			        storage := row.Columns[27].GetString_()
 					
 					
 				// Insert a row 
@@ -1439,6 +1524,7 @@ if len(args) < 8 {
 					&shim.Column{Value: &shim.Column_String_{String_: shUniqueid}},
 					&shim.Column{Value: &shim.Column_String_{String_: asnNumber}},
 					&shim.Column{Value: &shim.Column_String_{String_: mrrRequestNumber}},
+					&shim.Column{Value: &shim.Column_String_{String_: storage}},
 				}})
 
 			if err != nil {
@@ -1550,6 +1636,7 @@ func (t *ABC) getMRRDetails(stub shim.ChaincodeStubInterface, args []string) ([]
 		itemdetails.PurchageOrderNumber = row.Columns[20].GetString_()
 		itemdetails.AsnNumber = row.Columns[25].GetString_()
 		itemdetails.MrrRequestNumber = row.Columns[26].GetString_()
+		itemdetails.Storage = row.Columns[27].GetString_()
 		
 		mrritem.ItemDetail = append(mrritem.ItemDetail, itemdetails)		
 	}
@@ -1603,6 +1690,9 @@ func (t *ABC) Query(stub shim.ChaincodeStubInterface, function string, args []st
 	}else if function == "getLineitemByStatus" { 
 		t := ABC{}
 		return t.getLineitemByStatus(stub, args)
+	}else if function == "getLineitemByStorage" { 
+		t := ABC{}
+		return t.getLineitemByStorage(stub, args)
 	}else if function == "getLineitemCountByStatus" { 
 		t := ABC{}
 		return t.getLineitemCountByStatus(stub, args)
