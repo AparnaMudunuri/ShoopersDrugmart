@@ -1192,7 +1192,7 @@ func (t *ABC) getLineitemByStorage(stub shim.ChaincodeStubInterface, args []stri
 	rows, err := stub.GetRows("ITEM", columns)
 	
 	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get the data for the storage " + status + "\"}"
+		jsonResp := "{\"Error\":\"Failed to get the data for the storage " + storage + "\"}"
 		return nil, errors.New(jsonResp)
 	}
 
