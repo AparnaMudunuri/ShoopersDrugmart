@@ -1204,7 +1204,7 @@ func (t *ABC) getLineitemByStorage(stub shim.ChaincodeStubInterface, args []stri
 	for row := range rows {		
 		fetchedLineItemStorage := row.Columns[27].GetString_()
 		
-		if fetchedLineItemStorage == status{
+		if fetchedLineItemStorage == storage{
 			
 			
 			itemdetails.LineItemId = row.Columns[0].GetString_()
