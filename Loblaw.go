@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"github.com/hyperledger/fabric/core/crypto/primitives"
+	"github.com/fogleman/primitive/primitive"
 )
 
 
